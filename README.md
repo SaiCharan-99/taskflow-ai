@@ -32,19 +32,12 @@
 
 | Role | Email | Password |
 |------|-------|----------|
-| **Admin / CEO** | `ceo@taskflow.com` | `Admin@123` |
-| **Manager / CTO** | `cto@taskflow.com` | `Manager@123` |
-| **Manager / Head of Product** | `product-head@taskflow.com` | `Manager@123` |
-| **Manager / Ops Manager** | `ops@taskflow.com` | `Manager@123` |
-| **Employee / Sr. Frontend** | `fe-lead@taskflow.com` | `Manager@123` |
-| **Employee / Sr. Backend** | `be-lead@taskflow.com` | `Manager@123` |
-| **Employee / QA Engineer** | `qa@taskflow.com` | `Employee@123` |
-| **Employee / Frontend Dev** | `fe-dev@taskflow.com` | `Employee@123` |
-| **Employee / Backend Dev** | `be-dev@taskflow.com` | `Employee@123` |
-| **Employee / PM** | `pm@taskflow.com` | `Employee@123` |
-| **Employee / DevOps** | `devops@taskflow.com` | `Employee@123` |
-| **Employee / BizOps** | `bizops@taskflow.com` | `Employee@123` |
+| **Admin (CEO)** | `ceo@taskflow.com` | `Admin@123` |
+| **Manager (CTO)** | `cto@taskflow.com` | `Manager@123` |
+| **Employee (Frontend Dev)** | `fe-dev@taskflow.com` | `Employee@123` |
 | **Intern** | `intern@taskflow.com` | `Intern@123` |
+
+> 12 pre-seeded employees across Engineering, Product, and Operations teams.
 
 ---
 
@@ -374,6 +367,6 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
-<div align="center">
-Built with ❤️ using React, Node.js, Prisma & Google Gemini AI
-</div>
+## 📄 License
+
+MIT License — see [LICENSE](LICENSE) for details.
