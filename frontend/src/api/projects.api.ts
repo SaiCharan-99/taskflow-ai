@@ -2,7 +2,7 @@ import client from './client';
 import type { Project, ProjectMember } from '@/types';
 
 export const projectsApi = {
-  list: () => client.get<Project[]>('/api/projects').then((r) => r.data),
+  list: () => client.get<Project[]>('/api/projects').then((r) => Array.isArray(r.data) ? r.data : []),
   get: (id: string) => client.get<Project>(`/api/projects/${id}`).then((r) => r.data),
   members: (id: string) =>
     client.get<ProjectMember[]>(`/api/projects/${id}/members`).then((r) => r.data),
