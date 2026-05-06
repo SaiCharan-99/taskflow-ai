@@ -335,8 +335,3 @@ MIT — free to use, modify, and distribute.
 
 ---
 
-<div align="center">
-
-Built with ❤️ using React + Express + PostgreSQL + Google Gemini
-
-</div>
