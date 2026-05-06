@@ -7,16 +7,19 @@ const AVATAR_COLORS = [
   'bg-cyan-600',
 ];
 
-export const colorFromId = (id: string) => {
+export const colorFromId = (id?: string) => {
+  if (!id) return AVATAR_COLORS[0];
   let h = 0;
   for (let i = 0; i < id.length; i++) h = (h << 5) - h + id.charCodeAt(i);
   return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
 };
 
-export const initials = (name: string) =>
-  name
+export const initials = (name?: string) => {
+  if (!name) return '?';
+  return name
     .split(' ')
     .filter(Boolean)
     .slice(0, 2)
     .map((n) => n[0]?.toUpperCase())
-    .join('');
+    .join('') || '?';
+};

@@ -19,9 +19,10 @@ const pageNameFromPath = (pathname: string) => {
 };
 
 // ─── Avatar ──────────────────────────────────────────────────────────────────
-const AvatarCircle = ({ name, size = 32 }: { name: string; size?: number }) => {
-  const initials = name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
-  const hue = name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
+const AvatarCircle = ({ name, size = 32 }: { name?: string; size?: number }) => {
+  const safeName = name ?? '?';
+  const initials = safeName.split(' ').filter(Boolean).map((n) => n[0]).join('').toUpperCase().slice(0, 2) || '?';
+  const hue = safeName.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
   return (
     <div
       className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 cursor-pointer ring-2 ring-transparent hover:ring-blue-500 transition-all"
