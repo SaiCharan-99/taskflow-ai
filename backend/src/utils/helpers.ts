@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
-import { prisma } from '../lib/prisma.js';
+import { prisma } from '../lib/prisma';
 
 export const hashPassword = async (password: string): Promise<string> => {
   return bcrypt.hash(password, 10);

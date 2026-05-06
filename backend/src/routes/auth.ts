@@ -1,7 +1,7 @@
 import express, { Response } from 'express';
-import { hashPassword, verifyPassword, generateOTP, sendOTPEmail } from '../utils/helpers.js';
-import { authMiddleware, generateToken, AuthRequest } from '../middleware/auth.js';
-import { prisma } from '../lib/prisma.js';
+import { hashPassword, verifyPassword, generateOTP, sendOTPEmail } from '../utils/helpers';
+import { authMiddleware, generateToken, AuthRequest } from '../middleware/auth';
+import { prisma } from '../lib/prisma';
 
 const router = express.Router();
 

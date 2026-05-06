@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 // ISSUE-06 FIX: Use shared Prisma singleton instead of creating a new PrismaClient instance
 // (a second instance opened its own connection pool, risking exhaustion under load)
-import { prisma } from '../lib/prisma.js';
+import { prisma } from '../lib/prisma';
 
 export interface AuthRequest extends Request {
   userId?: string;

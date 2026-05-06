@@ -1,7 +1,7 @@
 import express, { Response } from 'express';
-import { AuthRequest } from '../middleware/auth.js';
-import { calculateDashboardData } from '../utils/helpers.js';
-import { prisma } from '../lib/prisma.js';
+import { AuthRequest } from '../middleware/auth';
+import { calculateDashboardData } from '../utils/helpers';
+import { prisma } from '../lib/prisma';
 
 const router = express.Router();
 
