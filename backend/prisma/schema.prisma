@@ -1,0 +1,212 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  globalRole String  @default("MEMBER") // ADMIN, MANAGER, MEMBER
+  isVerified Boolean @default(false)
+  otpCode   String?
+  otpExpires DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projectMembers ProjectMember[]
+  createdTasks   Task[]           @relation("creator")
+  assignedTasks  Task[]           @relation("assignee")
+  createdProjects Project[]
+  activityLogs   ActivityLog[]
+  roleRequest    RoleRequest?
+  
+  // Team relations
+  teamMembers    TeamMember[]
+  managedTeams   Team[]           @relation("manager")
+  directReports  TeamMember[]     @relation("manager")
+
+  // Notifications
+  notifications  Notification[]
+}
+
+model Project {
+  id        String   @id @default(cuid())
+  name      String
+  description String?
+  riskLevel String  @default("LOW") // LOW, MEDIUM, HIGH
+  createdBy String
+  creator   User    @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members      ProjectMember[]
+  tasks        Task[]
+  activityLogs ActivityLog[]
+  teamProjects TeamProject[]
+  // DashboardData model removed (ISSUE-09) — dashboard is computed live, never persisted
+
+  @@index([createdBy])
+}
+
+model ProjectMember {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   @default("MEMBER") // ADMIN, MANAGER, MEMBER
+  joinedAt  DateTime @default(now())
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  type        String   @default("FEATURE") // BUG, FEATURE, IMPROVEMENT
+  status      String   @default("TODO") // TODO, IN_PROGRESS, IN_REVIEW, DONE
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assigneeId  String?
+  assignee    User?    @relation("assignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  creatorId   String
+  creator     User     @relation("creator", fields: [creatorId], references: [id], onDelete: Cascade)
+  dueDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  activityLogs ActivityLog[]
+
+  @@index([projectId])
+  @@index([assigneeId])
+  @@index([creatorId])
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId    String?
+  task      Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  action    String   // created, updated, completed, etc.
+  meta      String?  // JSON string for additional data
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([taskId])
+}
+
+// DashboardData model removed (ISSUE-09): it was never written to — the dashboard route
+// computes all metrics live from Task records. Run a migration to drop the table:
+//   npx prisma migrate dev --name remove-dashboard-data
+
+model RoleRequest {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  requestedRole String   // ADMIN, MANAGER, MEMBER
+  status        String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  reason        String   // Why they want this role
+  position      String?  // Their job title/position
+  reviewedBy    String?  // Admin who reviewed
+  reviewNotes   String?  // Notes from admin
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId])
+  @@index([userId])
+  @@index([status])
+}
+
+model AgentSession {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  messages  String   // JSON string of AgentMessage[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([userId])
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  department  String   // Engineering, Product, Operations, Sales, Marketing
+  managerId   String
+  manager     User     @relation("manager", fields: [managerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     TeamMember[]
+  projects    TeamProject[]
+
+  @@index([managerId])
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   @default("IC") // IC (Individual Contributor), LEAD, MANAGER
+  managerId String?  // Direct manager within the team
+  manager   User?    @relation("manager", fields: [managerId], references: [id], onDelete: SetNull)
+  title     String   // Job title
+  joinedAt  DateTime @default(now())
+
+  @@unique([teamId, userId])
+  @@index([teamId])
+  @@index([userId])
+  @@index([managerId])
+}
+
+model TeamProject {
+  id        String   @id @default(cuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignedAt DateTime @default(now())
+
+  @@unique([teamId, projectId])
+  @@index([teamId])
+  @@index([projectId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("task_assigned") // task_assigned, task_updated, project_added, mention
+  isRead    Boolean  @default(false)
+  link      String?  // e.g. /projects/:id/board
+  taskId    String?
+  projectId String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, isRead])
+  @@index([createdAt])
+}
