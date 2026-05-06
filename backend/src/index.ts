@@ -14,7 +14,8 @@ import { authMiddleware } from './middleware/auth';
 
 const app = express();
 
-// Middleware
+// ── CORS ──────────────────────────────────────────────────────────────────────
+// Allow localhost (dev) + any Railway subdomain + whatever FRONTEND_URL is set to
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   'http://localhost:5173',
@@ -26,21 +27,35 @@ const allowedOrigins = [
   'http://localhost:8085',
 ].filter(Boolean) as string[];
 
-
 app.use(cors({
   origin: (origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) {
       callback(null, true);
       return;
     }
-
+    // Allow Railway domains and configured origins
+    if (
+      allowedOrigins.includes(origin) ||
+      origin.endsWith('.railway.app') ||
+      origin.endsWith('.up.railway.app')
+    ) {
+      callback(null, true);
+      return;
+    }
     callback(new Error(`CORS blocked: ${origin}`));
   },
   credentials: true,
 }));
+
 app.use(express.json());
 
-// Routes
+// ── Health check — must come BEFORE auth middleware ───────────────────────────
+app.get('/health', (_req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/role-requests', roleRequestsRoutes);
 app.use('/api/projects', authMiddleware, projectsRoutes);
@@ -49,20 +64,17 @@ app.use('/api/agent', authMiddleware, agentRoutes);
 app.use('/api/teams', authMiddleware, teamsRoutes);
 app.use('/api/notifications', authMiddleware, notificationsRoutes);
 
-// Tasks routes are intentionally mounted at the same /api/projects prefix as projectsRoutes.
-// They are sub-resources: /:projectId/tasks, /:projectId/tasks/:taskId
-// Route patterns don't conflict because tasks paths are longer and require /tasks segment.
+// Tasks are sub-resources of projects: /:projectId/tasks
 app.use('/api/projects', authMiddleware, tasksRoutes);
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok' });
-});
+// ── Start server ──────────────────────────────────────────────────────────────
+const PORT = parseInt(process.env.PORT || '3001', 10);
+const HOST = '0.0.0.0'; // Required for Railway — do NOT use localhost
 
-const PORT = process.env.PORT || 3001;
-
-app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`✅ Server running on http://${HOST}:${PORT}`);
+  console.log(`   NODE_ENV: ${process.env.NODE_ENV}`);
+  console.log(`   DB: ${process.env.DATABASE_URL ? 'connected' : '⚠️  DATABASE_URL not set'}`);
 });
 
 export { prisma, app };
