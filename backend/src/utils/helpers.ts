@@ -66,11 +66,11 @@ export const sendOTPEmail = async (email: string, otp: string): Promise<boolean>
     const transporter = nodemailer.createTransport({
       host: smtpHost,
       port: smtpPort,
-      secure: smtpPort === 465, // true for port 465 (SSL), false for 587 (TLS)
-      auth: {
-        user: smtpUser,
-        pass: smtpPass, // For Gmail: use App Password, NOT your regular password
-      },
+      secure: smtpPort === 465,
+      auth: { user: smtpUser, pass: smtpPass },
+      connectionTimeout: 5000,  // fail fast — 5s max to connect
+      greetingTimeout: 5000,
+      socketTimeout: 8000,
     });
 
     await transporter.sendMail({
