@@ -359,10 +359,6 @@ CEO — Robert Chen  (ceo@taskflow.com)
 | AI Agent (natural language commands) | ✅ |
 | Deployed on Railway (live & functional) | ✅ |
 
----
-
 ## 📄 License
 
 MIT License — see [LICENSE](LICENSE) for details.
-
----
