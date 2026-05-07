@@ -64,24 +64,9 @@ router.post('/signup', async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Email already registered' });
     }
 
-    const hashedPassword = await hashPassword(password);
-
-    // Demo/staging mode: skip OTP — create user as verified and return token immediately
-    if (isEmailVerifySkipped()) {
-      const user = await prisma.user.create({
-        data: { name, email, password: hashedPassword, globalRole: 'MEMBER', isVerified: true },
-      });
-      const token = generateToken(user.id);
-      return res.status(201).json({
-        id: user.id, email: user.email, name: user.name,
-        globalRole: user.globalRole, isVerified: true,
-        createdAt: user.createdAt, token,
-      });
-    }
-
-    // Production with real email: send OTP
     const otp = generateOTP();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+    const hashedPassword = await hashPassword(password);
 
     await prisma.user.create({
       data: { name, email, password: hashedPassword, otpCode: otp, otpExpires, globalRole: 'MEMBER' },
