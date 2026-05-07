@@ -366,7 +366,3 @@ CEO — Robert Chen  (ceo@taskflow.com)
 MIT License — see [LICENSE](LICENSE) for details.
 
 ---
-
-## 📄 License
-
-MIT License — see [LICENSE](LICENSE) for details.

@@ -52,8 +52,8 @@ export const sendOTPEmail = async (email: string, otp: string): Promise<boolean>
   // SMTP via nodemailer (Gmail, Outlook, or any SMTP server)
   const smtpHost = process.env.SMTP_HOST;
   const smtpPort = Number(process.env.SMTP_PORT || '587');
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
+  const smtpUser = process.env.SMTP_USER || process.env.GMAIL_USER;           // fallback to GMAIL_USER
+  const smtpPass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD;   // fallback to GMAIL_APP_PASSWORD
   const smtpFrom = process.env.SMTP_FROM || `TaskFlow <${smtpUser}>`;
 
   if (!smtpHost || !smtpUser || !smtpPass) {

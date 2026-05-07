@@ -186,6 +186,13 @@ router.patch('/:projectId/tasks/:taskId', async (req: AuthRequest, res: Response
     const { projectId, taskId } = req.params;
     const { title, description, priority, type, status, assigneeId, dueDate } = req.body;
 
+    // Fetch requester name + project name for notification message
+    const [requester, project, existingTask] = await Promise.all([
+      prisma.user.findUnique({ where: { id: req.userId }, select: { name: true } }),
+      prisma.project.findUnique({ where: { id: projectId }, select: { name: true } }),
+      prisma.task.findUnique({ where: { id: taskId }, select: { assigneeId: true, title: true } }),
+    ]);
+
     const hasAccess = await prisma.project.findFirst({
       where: {
         id: projectId,
@@ -237,6 +244,40 @@ router.patch('/:projectId/tasks/:taskId', async (req: AuthRequest, res: Response
         meta: JSON.stringify({ status: status || task.status }),
       },
     });
+
+    // Notify new assignee if task was just assigned or reassigned to someone else
+    const assigneeChanged = assigneeId !== undefined && assigneeId !== existingTask?.assigneeId;
+    if (assigneeChanged && assigneeId && assigneeId !== req.userId) {
+      await prisma.notification.create({
+        data: {
+          userId: assigneeId,
+          title: 'Task assigned to you',
+          message: `${requester?.name ?? 'Someone'} assigned you "${task.title}" in ${project?.name ?? 'a project'}`,
+          type: 'task_assigned',
+          link: `/projects/${projectId}/board`,
+          taskId: task.id,
+          projectId,
+        },
+      });
+    }
+
+    // Notify if status changed — useful for task creator
+    if (status && status !== existingTask?.assigneeId && task.creatorId && task.creatorId !== req.userId) {
+      // Only notify on meaningful status transitions
+      if (status === 'DONE' || status === 'IN_REVIEW') {
+        await prisma.notification.create({
+          data: {
+            userId: task.creatorId,
+            title: `Task moved to ${status.replace('_', ' ')}`,
+            message: `"${task.title}" was moved to ${status.replace('_', ' ')} in ${project?.name ?? 'a project'}`,
+            type: 'task_updated',
+            link: `/projects/${projectId}/board`,
+            taskId: task.id,
+            projectId,
+          },
+        });
+      }
+    }
 
     res.json({
       id: task.id,
