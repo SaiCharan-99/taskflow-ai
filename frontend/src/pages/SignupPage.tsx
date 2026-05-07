@@ -60,11 +60,18 @@ const SignupPage = () => {
 
   const onSubmit = handleSubmit(async (values) => {
     try {
-      await authApi.signup(values.name, values.email, values.password);
-      navigate(`/verify-otp?email=${encodeURIComponent(values.email)}`);
-    } catch (e) {
+      const result = await authApi.signup(values.name, values.email, values.password);
+      // SKIP_EMAIL_VERIFY mode: server returns token directly — store and redirect to app
+      if ((result as any).token) {
+        localStorage.setItem('authToken', (result as any).token);
+        navigate('/projects');
+      } else {
+        navigate(`/verify-otp?email=${encodeURIComponent(values.email)}`);
+      }
+    } catch (e: any) {
       const msg =
-        (e as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        e?.response?.data?.error ??
+        e?.response?.data?.message ??
         'Could not create account';
       toast({ variant: 'destructive', title: 'Sign up failed', description: msg });
     }
